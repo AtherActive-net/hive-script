@@ -1,4 +1,5 @@
-import {Token, TokenType} from './app.js';
+import {TokenType} from './lib/Utilities.js';
+import {Token} from './lib/Token.js';
 
 export class Expr {
     constructor() {
