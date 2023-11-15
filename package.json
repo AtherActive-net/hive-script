@@ -17,5 +17,8 @@
     "url": "https://github.com/AtherActive-net/hive-script/issues"
   },
   "homepage": "https://github.com/AtherActive-net/hive-script#readme",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^20.5.6"
+  }
 }
