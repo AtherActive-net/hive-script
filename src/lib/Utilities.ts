@@ -1,3 +1,5 @@
+import { Literal, Variable } from "syntax";
+
 export enum TokenType {
 	LEFT_PAREN = "(",
 	RIGHT_PAREN = ")",
@@ -122,3 +124,7 @@ export const types = [
 	TokenType.STRING_TYPE,
 	TokenType.BOOLEAN_TYPE,
 ];
+
+export function varToLiteral(variable: Variable): Literal {
+	return new Literal(variable.value, variable.type);
+}

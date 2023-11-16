@@ -23,6 +23,7 @@ export class ParserV2 {
 	private position: number = -1;
 	private tokens: Token[];
 	private runtimeChache: Map<string, Expr> = new Map();
+	public allowReturn: boolean = false;
 
 	constructor(tokens: Token[], private intepreter: HiveScriptIntepreter) {
 		this.tokens = tokens;
@@ -34,7 +35,7 @@ export class ParserV2 {
 
 	// Helper functions
 	private isAtEnd() {
-		return this.position + 1 == this.tokens.length;
+		return this.position + 1 >= this.tokens.length;
 	}
 
 	private advance(count: number = 1) {
@@ -73,12 +74,11 @@ export class ParserV2 {
 			const tok = this.advance();
 			latest = this.expression(tok);
 		}
-		console.log("<<<-- Execution finished, final memory dump -->>>\n");
 		return latest;
 	}
 
 	public expression(tok: Token, resolveOperators: boolean = true) {
-		// if(!tok) return;
+		// if (!tok) return;
 		if (tok.type === TokenType.IDENTIFIER) {
 			const id = this.identifier(tok) as Literal;
 			tok = new Token(id.valueType, id.value, id.value, tok.line);
@@ -103,11 +103,11 @@ export class ParserV2 {
 
 			case TokenType.STRING:
 				if (
-					this.lookAhead(1).type == TokenType.DOT &&
+					this.lookAhead(1)?.type == TokenType.DOT &&
 					resolveOperators
 				) {
 					return this.stringOperation(tok);
-				} else if (operators.includes(this.lookAhead(1).type)) {
+				} else if (operators.includes(this.lookAhead(1)?.type)) {
 					this.error(
 						tok,
 						error.operationNotSupportedType(tok.type),
@@ -147,9 +147,23 @@ export class ParserV2 {
 				this.functionDeclaration(this.advance(), this.advance());
 				break;
 			case TokenType.RUN:
-				this.functionExecution(this.advance());
-				break;
+				return this.functionExecution(this.advance());
 
+			case TokenType.RETURN:
+				if (!this.allowReturn)
+					this.error(
+						tok,
+						error.returnOutsideFunction(),
+						suggestions.returnOutsideFunction
+					);
+
+				const returnValue = this.expression(this.advance());
+
+				if (returnValue instanceof Literal || !returnValue) {
+					this.position = this.tokens.length + 1000;
+					return returnValue;
+				}
+				break;
 			default:
 				if (reservedKeywords.has(tok.lexeme)) this.reserved(tok);
 				break;
@@ -270,7 +284,7 @@ export class ParserV2 {
 
 		if (!types.includes(type.type) || name.type != TokenType.IDENTIFIER) {
 			// todo: error
-			return process.exit(1);
+			return console.error("u goofed");
 		}
 
 		return new Variable(name, new Literal(null, type.type), type.type);
@@ -312,6 +326,8 @@ export class ParserV2 {
 		const params = [];
 
 		if (this.lookAhead().type != TokenType.LEFT_PAREN) {
+			console.log(tok);
+			console.log(this.lookAhead());
 			process.exit(1);
 		}
 
@@ -319,9 +335,13 @@ export class ParserV2 {
 
 		while (this.lookAhead().type != TokenType.RIGHT_PAREN) {
 			params.push(this.expression(this.advance()));
+			if (this.lookAhead().type != TokenType.COMMA) break;
+			this.advance();
 		}
 
 		const parser = new ParserV2(func.body as Token[], this.intepreter);
+		parser.allowReturn = true; // required for return statements to work
+
 		params.forEach((p, i) => {
 			const functionArgument = func.params[i];
 			const variable = new Variable(
@@ -332,7 +352,8 @@ export class ParserV2 {
 			parser.runtimeChache.set(functionArgument.name.lexeme, variable);
 		});
 
-		parser.parse();
+		console.log(params);
+		return parser.parse();
 	}
 
 	public operation(tok: Token, importedTokens?: Token[]) {
@@ -529,6 +550,7 @@ export class ParserV2 {
 
 	// Yes, this should be moved. Not done yet.
 	public reserved(tok: Token) {
+		if (!tok) return;
 		switch (tok.type) {
 			case TokenType.PRINT:
 				const printValue = this.expression(this.advance());

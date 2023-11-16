@@ -19,8 +19,8 @@ export class HiveScriptIntepreter {
 		const parse = new ParserV2(lex.tokens, this);
 		parse.parse();
 		this.enableAdditionalDebug ? console.timeEnd("Parser Time") : null;
-
-		console.table(parse.getRuntimeCache());
+		console.log("<<<-- Execution finished, final memory dump -->>>\n");
+		console.log(parse.getRuntimeCache());
 	}
 }
 

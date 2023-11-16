@@ -1,5 +1,5 @@
-prog int testing(int helloworld) {
-    output helloworld;
+prog str testing(int helloworld, int test2) {
+    return "whats this??? Its: " . helloworld . " and: " . test2;
 };
 
-run testing(10);
+output run testing(6969, 100);
