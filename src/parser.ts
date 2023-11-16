@@ -344,6 +344,20 @@ export class ParserV2 {
 
 		params.forEach((p, i) => {
 			const functionArgument = func.params[i];
+			if (
+				p instanceof Literal &&
+				p.valueType != functionArgument.type.toLowerCase()
+			) {
+				return this.error(
+					tok,
+					error.argumentTypeError(
+						functionArgument.name.lexeme,
+						functionArgument.type,
+						p.valueType
+					),
+					suggestions.argumentTypeError
+				);
+			}
 			const variable = new Variable(
 				functionArgument.name,
 				p,

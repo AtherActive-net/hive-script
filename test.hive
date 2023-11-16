@@ -1,5 +1,7 @@
-prog str testing(int helloworld, int test2) {
-    return "whats this??? Its: " . helloworld . " and: " . test2;
-};
+prog str testing(int helloworld, int test2, str stringtest) {
+    return "whats this??? Its: " . helloworld . " and: " . test2 . stringtest;
+}; 
 
-output run testing(6969, 100);
+int funninumber = 6969;
+
+output run testing(funninumber, 100, "heey");
